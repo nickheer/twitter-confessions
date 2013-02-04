@@ -1,0 +1,576 @@
+/* Multi-Interface Form Controls Framework
+Created by Nick Heer (nickheer.com), and licensed under a standard MIT License.
+THIS IS VERSION 1.0, LAST MODIFIED JUNE 14 2012.
+
+Please keep the above three lines. This line, and the changelog below it, can be deleted.
+
+Changelog:
+1.0 (June 14, 2012) - Release candidate
+- BIG NEWS: Let me tell you about my hacky workarounds!
+-- Firefox has issues with allowing stylesheets to override their default form controls (https://bugzilla.mozilla.org/show_bug.cgi?id=649849 and https://bugzilla.mozilla.org/show_bug.cgi?id=418833)
+-- I wanted to keep this a 100% CSS solution, so my workarounds are awesome, and a little janky
+-- Insert radio buttons and checkboxes like this:
+--- <span class="checkbox"><input type="checkbox" name="foods" value="IceCream"><ul><li id="uc1"><a href="#c1"></a></li><li id="c1"><a href="#uc1"></a></li></ul> Ice Cream</span>
+--- That is: <span>, with the same class as the input type, <input> (with standard information), followed by an unordered list, followed by the control's label
+--- Each successive checkbox or radio button should have the number in the ID (c1 and uc1) increased by 1 (c2, c3...; uc2, uc3...) for each instance
+--- KNOWN ISSUE: clicking a "Reset" button in Firefox will not appear to reset selected items. They will, however, be reset.
+--- KNOWN ISSUE: there's some page jumping going on in Firefox, due to the in-page anchors
+--- KNOWN ISSUE: radio buttons don't function correctly in Firefox. Use a selection menu instead.
+--- http://www.impressivewebs.com/javascript-content-switcher-without-javascript/
+- Other fixes:
+-- Fixed my lazy checkbox (thanks, Dribbble user "Wolfr")
+--- Uses the amazing Pictos set by Drew Wilson (http://pictos.cc)
+-- Added <textarea> support
+-- Added support for disabled elements
+-- Now released under a standard MIT License
+-- Now called "Tuxedo" because I like stupid puns
+-- Ported to LESS
+--- If you aren't using the LESS version, I highly recommend you switch to it
+--- If you'd rather not, please read the documentation carefully
+
+0.99 (May 12, 2012) - Close to being feature-complete
+- Added Retina display support
+- Expanded gradient support
+- Added fallbacks for old browsers
+
+0.9 (March 26, 2012) - Initial public release
+0.8-0.1 - Prerelease iterations
+*/
+
+/*base values*/
+
+form{
+	display: block;
+	width: 640px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+form section{
+	height: auto;
+	display: block;
+	margin-top: 10px;
+	margin-bottom: 10px;
+	padding-left: 140px;
+}
+
+label{
+	display: block;
+	width: 120px;
+	float: left;
+	text-align: right;
+	margin-left: -140px;
+	margin-right: 20px;
+	line-height: 30px;
+	font-size: 14px;
+	font-weight: bold;
+}
+
+input{
+	margin: 10px;
+	font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	-webkit-appearance:none; /*disables inner shadows on iOS*/
+	outline: none;
+}
+
+form span, span.checkbox{
+	width: 100%;
+	height: 30px;
+	display: block;
+	font-size: 14px;
+}
+
+input[type="text"], input[type="password"]{
+	width: 230px;
+	height: 20px;
+	margin: 0px;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	outline: none;
+	padding: 5px;
+	font-size: 14px;
+}
+
+input[type="radio"]{
+	width: 16px;
+	height: 16px;
+	-webkit-border-radius: 50%;
+	-moz-border-radius: 50%;
+	border-radius: 50%;
+	margin: 2px;
+	position: relative;
+	top: 4px;
+	-moz-appearance: none !important;
+}
+
+input[type="checkbox"]{
+	width: 16px;
+	height: 16px;
+	margin: 2px;
+	position: relative;
+	top: 4px;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	-moz-appearance: none !important;
+}
+
+input[type="radio"]:after, input[type="checkbox"]:after{
+	display: block;
+	float: left;
+}
+
+select{
+	width: 60px;
+	height: 30px;
+	padding: 5px;
+	display: block;
+	font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	font-weight: bold;
+	padding-left: 10px;
+	outline: none;
+	-webkit-appearance:none;
+	-moz-appearance: none;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	border-radius: 5px;
+}
+
+select option{
+	text-align: right;
+	outline: none;
+}
+
+input[type="submit"], input[type="reset"], input[type="button"]{
+	width: 120px;
+	height: 40px;
+	margin: 10px;
+	border-radius: 5px;
+	outline: none;
+	font-size: 18px;
+	font-weight: bold;
+}
+
+input[type="submit"]{
+	background: #8fc400;
+	background: -moz-linear-gradient(top, #c6e87f 0%, #8fc400 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#c6e87f), color-stop(100%,#8fc400));
+	background: -webkit-linear-gradient(top, #c6e87f 0%,#8fc400 100%);
+	background: -ms-linear-gradient(top, rgba(198,232,127,1) 0%,rgba(143,196,0,1) 100%); 
+	background: linear-gradient(top, rgba(198,232,127,1) 0%,rgba(143,196,0,1) 100%); 
+	border: 1px solid #8fc400;
+	color: #fff;
+	text-shadow: 0px -1px 0px #8fc400;
+}
+
+input[type="submit"]:active{
+	background: #c6e87f;
+	background: -moz-linear-gradient(top, #8fc400 0%, #c6e87f 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#8fc400), color-stop(100%,#c6e87f));
+	background: -webkit-linear-gradient(top, #8fc400 0%,#c6e87f 100%);
+	background: -ms-linear-gradient(top, rgba(143,196,0,1) 0%,rgba(198,232,127,1) 100%); 
+	background: linear-gradient(top, rgba(143,196,0,1) 0%,rgba(198,232,127,1) 100%);
+}
+
+input[type="reset"]{
+	background: #cf0404;
+	background: -moz-linear-gradient(top, #ff3019 0%, #cf0404 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ff3019), color-stop(100%,#cf0404));
+	background: -webkit-linear-gradient(top, #ff3019 0%,#cf0404 100%);
+	background: -ms-linear-gradient(top, rgba(255,48,25,1) 0%,rgba(207,4,4,1) 100%);
+	background: linear-gradient(top, rgba(255,48,25,1) 0%,rgba(207,4,4,1) 100%);
+	border: 1px solid #cf0404;
+	color: #fff;
+	text-shadow: 0px -1px 0px #cf0404;
+}
+
+input[type="reset"]:active{
+	background: #ff3019;
+	background: -moz-linear-gradient(top, #cf0404 0%, #ff3019 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#cf0404), color-stop(100%,#ff3019));
+	background: -webkit-linear-gradient(top, #cf0404 0%,#ff3019 100%);
+	background: -ms-linear-gradient(top, rgba(207,4,4,1) 0%,rgba(255,48,25,1) 100%);
+	background: linear-gradient(top, rgba(207,4,4,1) 0%,rgba(255,48,25,1) 100%);
+}
+
+textarea{
+	width: 230px;
+	height: 110px;
+	padding: 5px;
+	font: 14px light 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	-webkit-appearance:none;
+	-moz-appearance: none;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+}
+
+textarea:focus {
+	outline:0;
+}
+
+[disabled]{
+	opacity: 0.5;
+}
+
+/*dark form*/
+
+form.dark{
+	color: #222;
+}
+
+form.dark input[type="text"], form.dark input[type="password"]{
+	background: rgba(255,255,255,0.9);
+	border: 1px solid #aaa;
+	color: #333;
+}
+
+form.dark input[type="radio"]{
+	border: 1px solid #aaa;
+	background: url('dots.png') 0px 0px no-repeat;
+}
+
+form.dark input[type="radio"]:checked{
+	background: url('dots.png') 0px -16px no-repeat;
+}
+
+form.dark input[type="checkbox"]{
+	border: 1px solid #aaa;
+	background: url('tick.png') 0px 0px no-repeat;
+}
+
+form.dark input[type="checkbox"]:checked{
+	background: url('tick.png') 0px -16px no-repeat;
+}
+
+form.dark select{
+	border: 1px solid #aaa;
+	background: url('arrows-dk.png') no-repeat 45px 9px;
+	background-color: rgba(255,255,255,0.9);
+}
+
+form.dark input[type="button"]{
+	background: #fff;
+	background: -moz-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(255,255,255,1)), color-stop(47%,rgba(246,246,246,1)), color-stop(100%,rgba(237,237,237,1)));
+	background: -webkit-linear-gradient(top, rgba(255,255,255,1) 0%,rgba(246,246,246,1) 47%,rgba(237,237,237,1) 100%);
+	border: 1px solid #4d4d4d;
+}
+
+form.dark input[type="button"]:active{
+	background: #fff;
+	background: -moz-linear-gradient(top, rgba(237,237,237,1) 0%, rgba(246,246,246,1) 53%, rgba(255,255,255,1) 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(237,237,237,1)), color-stop(53%,rgba(246,246,246,1)), color-stop(100%,rgba(255,255,255,1)));
+	background: -webkit-linear-gradient(top, rgba(237,237,237,1) 0%,rgba(246,246,246,1) 53%,rgba(255,255,255,1) 100%);
+}
+
+form.dark textarea{
+	border: 1px solid #aaa;
+}
+
+/*light form*/
+
+form.light{
+	color: #fff;
+}
+
+form.light input[type="text"], form.light input[type="password"]{
+	background: rgba(255,255,255,0.6);
+	border: 1px solid #fff;
+	color: #333;
+}
+
+form.light input[type="radio"]{
+	border: 1px solid #fff;
+	background: url('dots.png') -16px 0px no-repeat;
+}
+
+form.light input[type="radio"]:checked{
+	background: url('dots.png') -16px -16px no-repeat;
+}
+
+form.light input[type="checkbox"]{
+	border: 1px solid #fff;
+	background: url('tick.png') -16px 0px no-repeat;
+}
+
+form.light input[type="checkbox"]:checked{
+	background: url('tick.png') -16px -16px no-repeat;
+}
+
+form.light select{
+	color: #4d4d4d;
+	border: 1px solid #fff;
+	background: url('arrows-lt.png') no-repeat 45px 9px rgba(255,255,255,0.6);
+}
+
+form.light input[type="button"]{
+	background: #fff;
+	background: -moz-linear-gradient(top, rgba(255,255,255,0.9) 0%, rgba(246,246,246,0.7) 47%, rgba(237,237,237,0.7) 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(255,255,255,0.9)), color-stop(47%,rgba(246,246,246,0.7)), color-stop(100%,rgba(237,237,237,0.7)));
+	background: -webkit-linear-gradient(top, rgba(255,255,255,0.9) 0%,rgba(246,246,246,0.7) 47%,rgba(237,237,237,0.7) 100%);
+	border: 1px solid #fff;
+}
+
+form.light input[type="button"]:active{
+	background: #fff;
+	background: -moz-linear-gradient(top, rgba(237,237,237,0.7) 0%, rgba(246,246,246,0.7) 53%, rgba(255,255,255,0.9) 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(237,237,237,0.7)), color-stop(53%,rgba(246,246,246,0.7)), color-stop(100%,rgba(255,255,255,0.9)));
+	background: -webkit-linear-gradient(top, rgba(237,237,237,0.7) 0%,rgba(246,246,246,0.7) 53%,rgba(255,255,255,0.9) 100%); 
+}
+
+form.light textarea{
+	background: rgba(255,255,255,0.6);
+	border: 1px solid #fff;
+}
+
+/* multiple widths */
+
+.col1{
+	width: 60px;
+}
+
+.col2{
+	width: 120px;
+}
+
+.col3{
+	width: 180px;
+}
+
+.col4{
+	width: 240px;
+}
+
+.col5{
+	width: 300px;
+}
+
+form.light select.col4{
+	background: url('arrows-lt.png') no-repeat 225px 9px rgba(255,255,255,0.6);
+}
+
+form.light select.col5{
+	background: url('arrows-lt.png') no-repeat 285px 9px rgba(255,255,255,0.6);
+}
+
+/* Gecko (Firefox) workarounds */
+
+span.checkbox ul, span.radio ul{display: none;} /* to override the below workarounds in other browsers */
+
+@-moz-document url-prefix(){
+	span.radio{
+		padding: 0;
+		margin:0;
+		width: 100%;
+		height: 30px;
+		display: block;
+	}
+	
+	span.radio input{
+		position: relative;
+		top: -2px;
+		left: -20px;
+		width: 20px;
+		margin-right: -20px;
+		opacity: 0;
+	}
+	
+	span.radio ul{
+		width: 16px;
+		height: 16px;
+		display: block;
+		float: left;
+		margin-right: -22px;
+		overflow: hidden;
+		padding: 0;
+		margin: 0;
+		-moz-border-radius: 50%;
+		border-radius: 50%;
+	}
+	
+	form.dark span.radio ul{
+		border: 1px solid #aaa;
+	}
+	
+	form.light span.radio ul{
+		border: 1px solid #fff;
+	}
+	
+	span.radio li{
+		list-style: none;
+		height: 16px;
+		overflow: hidden;
+		display: list-item;
+		margin: 0;
+		padding: 0;
+	}
+	
+	span.radio li a{ 
+		width: 16px;
+		height: 16px;
+		display: block;
+		float: left;
+		cursor: default;
+		position: relative;
+		top: 0px;
+	}
+	
+	form.dark span.radio li[id^="uc"] a{
+		background: url('dots.png') 1px 0px no-repeat;
+	}
+	
+	form.dark span.radio li[id^="c"] a{
+		background: url('dots.png') 1px -15px no-repeat;
+	}
+	
+	form.light span.radio li[id^="uc"] a{
+		background: url('dots.png') -15px 0px no-repeat;
+	}
+	
+	form.light span.radio li[id^="c"] a{
+		background: url('dots.png') -15px -15px no-repeat;
+	}
+
+
+	span.checkbox{
+		padding: 0;
+		margin:0;
+		width: 100%;
+		height: 30px;
+		display: block;
+	}
+	
+	span.checkbox input{
+		position: relative;
+		top: -2px;
+		left: -20px;
+		width: 20px;
+		margin-right: -20px;
+		opacity: 0;
+	}
+	
+	span.checkbox ul{
+		width: 16px;
+		height: 16px;
+		display: block;
+		float: left;
+		margin-right: -22px;
+		overflow: hidden;
+		padding: 0;
+		margin: 0;
+		-moz-border-radius: 5px;
+		border-radius: 5px;
+	}
+	
+	form.dark span.checkbox ul{
+		border: 1px solid #aaa;
+	}
+	
+	form.light span.checkbox ul{
+		border: 1px solid #fff;
+	}
+	
+	span.checkbox li{
+		list-style: none;
+		height: 16px;
+		overflow: hidden;
+		display: list-item;
+		margin: 0;
+		padding: 0;
+	}
+	
+	span.checkbox li a{ 
+		width: 16px;
+		height: 16px;
+		display: block;
+		float: left;
+		cursor: default;
+		position: relative;
+		top: 0px;
+	}
+	
+	form.dark span.checkbox li[id^="uc"] a{
+		background: url('tick.png') 1px 0px no-repeat;
+	}
+	
+	form.dark span.checkbox li[id^="c"] a{
+		background: url('tick.png') 1px -15px no-repeat;
+	}
+	
+	form.light span.checkbox li[id^="uc"] a{
+		background: url('tick.png') -15px 0px no-repeat;
+	}
+	
+	form.light span.checkbox li[id^="c"] a{
+		background: url('tick.png') -15px -15px no-repeat;
+	}
+
+	select{
+		padding-left: 235px;	
+		text-indent: -225px !important;
+	}
+		
+	option{
+		text-align: left !important;
+	}
+}
+
+/* high-res displays */
+
+@media (-webkit-min-device-pixel-ratio:2) {
+	form.dark input[type="checkbox"]{
+		border: 1px solid #aaa;
+		background: url('tick@2x.png') 0px 0px no-repeat;
+		background-size: 32px 32px;
+	}
+
+	form.dark input[type="checkbox"]:checked{
+		background: url('tick@2x.png') 0px -16px no-repeat;
+	}
+	
+	form.light input[type="checkbox"]{
+		border: 1px solid #fff;
+		background: url('tick@2x.png') -16px 0px no-repeat;
+		background-size: 32px 32px;
+	}
+
+	form.light input[type="checkbox"]:checked{
+		background: url('tick@2x.png') -16px -16px no-repeat;
+	}
+	
+	form.dark input[type="radio"]{
+		border: 1px solid #aaa;
+		background: url('dots@2x.png') 0px 0px no-repeat;
+		background-size: 32px 32px;
+	}
+
+	form.dark input[type="radio"]:checked{
+		background: url('dots@2x.png') 0px -16px no-repeat;
+	}
+	
+	form.light input[type="radio"]{
+		border: 1px solid #fff;
+		background: url('dots@2x.png') -16px 0px no-repeat;
+		background-size: 32px 32px;
+	}
+
+	form.light input[type="radio"]:checked{
+		background: url('dots@2x.png') -16px -16px no-repeat;
+	}
+	
+	form.dark select{
+		border: 1px solid #aaa;
+		background: url('arrows-dk@2x.png') no-repeat 45px 9px rgba(255,255,255,0.9);
+		background-size: 5px 9px;
+	}
+	
+	form.light select{
+		color: #4d4d4d;
+		border: 1px solid #fff;
+		background: url('arrows-lt@2x.png') no-repeat 45px 9px rgba(255,255,255,0.6);
+		background-size: 5px 9px;
+	}
+	
+}
